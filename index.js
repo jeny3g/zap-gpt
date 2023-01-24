@@ -1,6 +1,6 @@
-import { create } from 'venom-bot'
-import * as dotenv from 'dotenv'
-import { Configuration, OpenAIApi } from "openai"
+import * as dotenv from 'dotenv';
+import { Configuration, OpenAIApi } from "openai";
+import { create } from 'venom-bot';
 
 dotenv.config()
 
@@ -71,7 +71,7 @@ const commands = (client, message) => {
                  * Faremos uma validação no message.from
                  * para caso a gente envie um comando
                  * a response não seja enviada para
-                 * nosso próprio número e sim para 
+                 * nosso próprio número e sim para
                  * a pessoa ou grupo para o qual eu enviei
                  */
                 client.sendText(message.from === process.env.BOT_NUMBER ? message.to : message.from, response)
