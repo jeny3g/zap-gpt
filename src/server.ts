@@ -1,6 +1,8 @@
 import * as dotenv from "dotenv";
 import { Configuration, OpenAIApi } from "openai";
 import { create, Whatsapp } from "venom-bot";
+import { Bot } from "./commands/bot";
+import { Img } from "./commands/img";
 
 dotenv.config();
 
@@ -18,42 +20,7 @@ const configuration = new Configuration({
   apiKey: process.env.OPENAI_KEY,
 });
 
-const openai = new OpenAIApi(configuration);
-
-const getDavinciResponse = async (clientText: string) => {
-  const options = {
-    model: "text-davinci-003", // Modelo GPT a ser usado
-    prompt: clientText, // Texto enviado pelo usuário
-    temperature: 1, // Nível de variação das respostas geradas, 1 é o máximo
-    max_tokens: 4000, // Quantidade de tokens (palavras) a serem retornadas pelo bot, 4000 é o máximo
-  };
-
-  try {
-    const response = await openai.createCompletion(options);
-    let botResponse = "";
-    response.data.choices.forEach(({ text }) => {
-      botResponse += text;
-    });
-    return `Chat GPT 🤖\n\n ${botResponse.trim()}`;
-  } catch (e) {
-    return `❌ OpenAI Response Error: ${e.response.data.error.message}`;
-  }
-};
-
-const getDalleResponse = async (clientText: string) => {
-  const options = {
-    prompt: clientText, // Descrição da imagem
-    n: 1, // Número de imagens a serem geradas
-    size: "1024x1024", // Tamanho da imagem
-  };
-
-  try {
-    const response = await openai.createImage(options);
-    return response.data.data[0].url;
-  } catch (e) {
-    return `❌ OpenAI Response Error: ${e.response.data.error.message}`;
-  }
-};
+export const openai = new OpenAIApi(configuration);
 
 const commands = (client: Whatsapp, message: any) => {
   const iaCommands = {
@@ -65,32 +32,13 @@ const commands = (client: Whatsapp, message: any) => {
 
   switch (firstWord) {
     case iaCommands.davinci3:
-      const question = message.text.substring(message.text.indexOf(" "));
-      getDavinciResponse(question).then((response) => {
-        /*
-         * Faremos uma validação no message.from
-         * para caso a gente envie um comando
-         * a response não seja enviada para
-         * nosso próprio número e sim para
-         * a pessoa ou grupo para o qual eu enviei
-         */
-        client.sendText(
-          message.from === process.env.BOT_NUMBER ? message.to : message.from,
-          response
-        );
-      });
+      const bot = new Bot();
+      bot.run(client, message);
       break;
 
     case iaCommands.dalle:
-      const imgDescription = message.text.substring(message.text.indexOf(" "));
-      getDalleResponse(imgDescription, message).then((imgUrl) => {
-        client.sendImage(
-          message.from === process.env.BOT_NUMBER ? message.to : message.from,
-          imgUrl,
-          imgDescription,
-          "Imagem gerada pela IA DALL-E 🤖"
-        );
-      });
+      const img = new Img();
+      img.run(client, message);
       break;
   }
 };
